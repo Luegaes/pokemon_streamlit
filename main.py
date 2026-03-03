@@ -65,7 +65,7 @@ lang_key    = "de" if "DE" in lang else "en"
 lbl         = LABELS[lang_key]
 TYPE_COLORS = TYPE_COLORS_DE if lang_key == "de" else TYPE_COLORS_EN
 
-csv_file = "kanto_feuerrot_schwaechen_de.csv" if lang_key == "de" else "kanto_feuerrot_schwaechen.csv"
+csv_file = "pokemon_streamlit\kanto_feuerrot_schwaechen_de.csv" if lang_key == "de" else "pokemon_streamlit\kanto_feuerrot_schwaechen.csv"
 df = load_data(csv_file)
 ATTACK_TYPES = [c for c in df.columns if c not in ("Nr","Name","Typ 1","Typ 2")]
 
@@ -79,52 +79,65 @@ choice  = st.selectbox(lbl["select"], options)
 idx     = options.index(choice)
 poke    = df.iloc[idx]
 
+# ── Stats-Auswahl ─────────────────────────────────────────────────────────────
+st.markdown("#### Stats-Auswahl")
+colStat_1 , colStat_2 = st.columns([1,1])
+with colStat_1:
+    schwächenSelected = st.checkbox("Typ-Schwächen", value=True)
+
+with colStat_2:
+    entwicklungsVerlauf = st.checkbox("Entwicklungsverlauf",value=True)
+
 # ── Pokémon-Info ─────────────────────────────────────────────────────────────
-st.divider()
-col1, col2 = st.columns([1, 2])
+if (schwächenSelected):
+    st.divider()
+    col1, col2 = st.columns([1, 2])
 
-with col1:
-    num = int(poke["Nr"])
-    st.image(f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{num}.png", width=800)
-    st.markdown(f"### {poke['Name']}")
-    st.markdown(f"**#{num:03d}**")
+    with col1:
+        num = int(poke["Nr"])
+        st.image(f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{num}.png", width=800)
+        st.markdown(f"### {poke['Name']}")
+        st.markdown(f"**#{num:03d}**")
 
-with col2:
-    t1 = str(poke["Typ 1"])
-    t2 = str(poke["Typ 2"]) if pd.notna(poke["Typ 2"]) and str(poke["Typ 2"]) not in ("","nan") else None
+    with col2:
+        t1 = str(poke["Typ 1"])
+        t2 = str(poke["Typ 2"]) if pd.notna(poke["Typ 2"]) and str(poke["Typ 2"]) not in ("","nan") else None
 
-    def badge(t):
-        c = TYPE_COLORS.get(t, "#999")
-        return f'<span style="background:{c};color:#fff;padding:4px 12px;border-radius:12px;font-weight:bold;font-size:0.9em;">{t}</span>'
+        def badge(t):
+            c = TYPE_COLORS.get(t, "#999")
+            return f'<span style="background:{c};color:#fff;padding:4px 12px;border-radius:12px;font-weight:bold;font-size:0.9em;">{t}</span>'
 
-    st.markdown(f"**{lbl['type']}:** {badge(t1)}{('  ' + badge(t2)) if t2 else ''}", unsafe_allow_html=True)
-    st.markdown(f"#### {lbl['interactions']}")
+        st.markdown(f"**{lbl['type']}:** {badge(t1)}{('  ' + badge(t2)) if t2 else ''}", unsafe_allow_html=True)
+        st.markdown(f"#### {lbl['interactions']}")
 
-    groups = {0:[],0.25:[],0.5:[],1:[],2:[],4:[]}
-    for atk in ATTACK_TYPES:
-        m = float(poke[atk])
-        if m in groups:
-            groups[m].append(atk)
+        groups = {0:[],0.25:[],0.5:[],1:[],2:[],4:[]}
+        for atk in ATTACK_TYPES:
+            m = float(poke[atk])
+            if m in groups:
+                groups[m].append(atk)
 
-    for m in [4,2,1,0.5,0.25,0]:
-        typen = groups[m]
-        if not typen:
-            continue
-        fg, bg = MULTIPLIER_STYLE[m]
-        label  = lbl["mult_labels"][m]
-        pills  = " ".join(
-            f'<span style="background:{TYPE_COLORS.get(t,"#999")};color:#fff;'
-            f'padding:2px 9px;border-radius:10px;font-size:0.85em;">{t}</span>'
-            for t in typen
-        )
-        st.markdown(
-            f'<div style="background:{bg};color:{fg};border-radius:8px;padding:7px 13px;margin:4px 0;">'
-            f'<b>{label}</b>: {pills}</div>',
-            unsafe_allow_html=True,
-        )
+        for m in [4,2,1,0.5,0.25,0]:
+            typen = groups[m]
+            if not typen:
+                continue
+            fg, bg = MULTIPLIER_STYLE[m]
+            label  = lbl["mult_labels"][m]
+            pills  = " ".join(
+                f'<span style="background:{TYPE_COLORS.get(t,"#999")};color:#fff;'
+                f'padding:2px 9px;border-radius:10px;font-size:0.85em;">{t}</span>'
+                for t in typen
+            )
+            st.markdown(
+                f'<div style="background:{bg};color:{fg};border-radius:8px;padding:7px 13px;margin:4px 0;">'
+                f'<b>{label}</b>: {pills}</div>',
+                unsafe_allow_html=True,
+            )
 
-with st.expander(lbl["all_table"]):
-    display = {atk: (f"×{float(poke[atk])}" if float(poke[atk]) != int(float(poke[atk])) else f"×{int(float(poke[atk]))}") for atk in ATTACK_TYPES}
-    st.dataframe(pd.DataFrame(display, index=["Wert"]).T, use_container_width=True)
+# ── Entwicklungsverlauf ───────────────────────────────────────────────────
+if entwicklungsVerlauf:
+    st.divider()
+    from evolution_verlauf import show_evolution
+    show_evolution(int(poke["Nr"]), lang_key)
 
+# ------ Source ------------------------
 st.caption(lbl["source"])

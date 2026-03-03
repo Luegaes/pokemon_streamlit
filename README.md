@@ -1,1 +1,1 @@
-# pokemon_streamlit
+# Pokedex
