@@ -3,16 +3,12 @@ import pandas as pd
 
 
 def show_evolution(poke_nr: int, lang_key: str):
-    """
-    Zeigt den Entwicklungsverlauf des Pokémon mit der Nationaldex-Nummer `poke_nr`.
-    lang_key: "de" oder "en"
-    """
-
+   
     # ── CSV laden ──────────────────────────────────────────────────────────
     csv_evo = (
-        "pokemon_streamlit\\pokemon_evolutions_de.csv"
+        "pokemon_evolutions_de.csv"
         if lang_key == "de"
-        else "pokemon_streamlit\\pokemon_evolutions_en.csv"
+        else "pokemon_evolutions_en.csv"
     )
 
     @st.cache_data

@@ -1,7 +1,22 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Kanto Pokédex", page_icon="🔴", layout="centered")
+# ----- sidebar -----
+with st.sidebar:
+    st.title("⚙️Settings")
+
+# --- Radio ---------
+    lang = st.radio("", ["🇩🇪 DE", "🇬🇧 EN"], horizontal=True, label_visibility="collapsed")
+
+# ── Stats-Auswahl ─────────────────────────────────────────────────────────────
+    st.markdown("## Stats-Auswahl")
+   
+    schwächenSelected = st.checkbox("Typ-Schwächen", value=True)
+    entwicklungsVerlauf = st.checkbox("Entwicklungsverlauf",value=True)
+
+# -----------------------------------
+
+st.set_page_config(page_title="Kanto Pokédex", page_icon="🔴", layout="centered",initial_sidebar_state="collapsed")
 
 TYPE_COLORS_EN = {
     "Normal":"#A8A878","Fire":"#F08030","Water":"#6890F0","Electric":"#F8D030",
@@ -56,37 +71,26 @@ def load_data(path):
     df.columns = [c.replace(" (x?)", "") for c in df.columns]
     return df
 
-# ── Sprachumschalter ─────────────────────────────────────────────────────────
-col_title, col_lang = st.columns([5, 1])
-with col_lang:
-    lang = st.radio("", ["🇩🇪 DE", "🇬🇧 EN"], horizontal=True, label_visibility="collapsed")
+# ── Titel ─────────────────────────────────────────────────────────
+
 
 lang_key    = "de" if "DE" in lang else "en"
 lbl         = LABELS[lang_key]
 TYPE_COLORS = TYPE_COLORS_DE if lang_key == "de" else TYPE_COLORS_EN
 
-csv_file = "pokemon_streamlit\kanto_feuerrot_schwaechen_de.csv" if lang_key == "de" else "pokemon_streamlit\kanto_feuerrot_schwaechen.csv"
+csv_file = "kanto_feuerrot_schwaechen_de.csv" if lang_key == "de" else "kanto_feuerrot_schwaechen.csv"
 df = load_data(csv_file)
 ATTACK_TYPES = [c for c in df.columns if c not in ("Nr","Name","Typ 1","Typ 2")]
 
-with col_title:
-    st.markdown(f"## {lbl['title']}")
-    st.markdown(f"**{lbl['subtitle']}**")
+
+st.markdown(f"## {lbl['title']}")
+st.markdown(f"**{lbl['subtitle']}**")
 
 # ── Selectbox ────────────────────────────────────────────────────────────────
 options = [f"#{int(row.Nr):03d}  {row.Name}" for _, row in df.iterrows()]
 choice  = st.selectbox(lbl["select"], options)
 idx     = options.index(choice)
 poke    = df.iloc[idx]
-
-# ── Stats-Auswahl ─────────────────────────────────────────────────────────────
-st.markdown("#### Stats-Auswahl")
-colStat_1 , colStat_2 = st.columns([1,1])
-with colStat_1:
-    schwächenSelected = st.checkbox("Typ-Schwächen", value=True)
-
-with colStat_2:
-    entwicklungsVerlauf = st.checkbox("Entwicklungsverlauf",value=True)
 
 # ── Pokémon-Info ─────────────────────────────────────────────────────────────
 if (schwächenSelected):
@@ -141,3 +145,5 @@ if entwicklungsVerlauf:
 
 # ------ Source ------------------------
 st.caption(lbl["source"])
+
+
